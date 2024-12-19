@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); 
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs'; 
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
@@ -7,21 +7,25 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true }
 });
 
+// Middleware to hash the password before saving the user
 userSchema.pre('save', async function(next) {
+  // Only hash the password if it's being modified (or if it's new)
   if (!this.isModified('password')) return next();
 
   try {
-    const salt = await bcrypt.genSalt(10); 
-    this.password = await bcrypt.hash(this.password, salt); 
+    // Generate a salt with 10 rounds
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (err) {
-    next(err);
+    next(err); // Pass error to next middleware (error handling)
   }
 });
 
+// Method to compare password during login
 userSchema.methods.comparePassword = function(password) {
-  return bcrypt.compare(password, this.password); 
+  return bcrypt.compare(password, this.password); // Returns a promise
 };
 
 const User = mongoose.model('User', userSchema); 
-module.exports = User; 
+export default User;
